@@ -129,7 +129,7 @@
         <input id="phone" type="tel" placeholder="Телефон">
         <input id="area" type="number" placeholder="Площадь (м²)">
         <textarea id="message" placeholder="Опишите задачу"></textarea>
-        <button class="submit-btn" onclick="sendEmail()">Отправить</button>
+        <button type="button" class="submit-btn" onclick="sendEmail()">Отправить</button>
       </div>
     </div>
 
@@ -491,13 +491,15 @@
     <p>© 2026 ООО "Кратос"</p>
   </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
-  <script>
-    (function () {
-      emailjs.init("5OWAHimvfaRvI1UrV");
-    })();
-  </script>
+<script>
+  (function () {
+    emailjs.init("5OWAHimvfaRvI1UrV");
+  })();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script src="script.js"></script>
 
