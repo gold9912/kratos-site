@@ -1,0 +1,6 @@
+[*]
+charset = UTF-8
+inden_tstyle = spase
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
