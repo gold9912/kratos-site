@@ -10,6 +10,16 @@ export interface ServiceItem {
   category: string;
 }
 
+export interface CalculatorItem {
+  id: string;
+  title: string;
+  price: number;
+  unit: Unit;
+  category: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export interface Employee {
   id: string;
   name: string;
@@ -33,6 +43,7 @@ export interface SessionUser {
   email: string;
   username: string | null;
   avatarUrl: string | null;
+  isAdmin: boolean;
 }
 
 export interface Profile {

@@ -27,6 +27,37 @@ set title = excluded.title,
     sort_order = excluded.sort_order,
     is_active = true;
 
+insert into public.services (id, title, description, price, unit, icon, category, sort_order)
+values
+  ('calc-cosmetic-renovation', 'Косметический ремонт', 'Позиция калькулятора: косметический ремонт', 2000, 'м²', '🧮', 'calculator:Основной ремонт', 10),
+  ('calc-capital-renovation', 'Капитальный ремонт', 'Позиция калькулятора: капитальный ремонт', 3500, 'м²', '🧮', 'calculator:Основной ремонт', 20),
+  ('calc-design-project', 'Дизайн-проект', 'Позиция калькулятора: дизайн-проект', 1500, 'м²', '🧮', 'calculator:Основной ремонт', 30),
+  ('calc-floor-covering', 'Укладка напольных покрытий', 'Позиция калькулятора: укладка напольных покрытий', 800, 'м²', '🧮', 'calculator:Полы и плитка', 40),
+  ('calc-floor-repair', 'Ремонт пола', 'Позиция калькулятора: ремонт пола', 3000, 'м²', '🧮', 'calculator:Полы и плитка', 50),
+  ('calc-tile-laying', 'Укладка плитки', 'Позиция калькулятора: укладка плитки', 1000, 'м²', '🧮', 'calculator:Полы и плитка', 60),
+  ('calc-door-installation', 'Установка двери', 'Позиция калькулятора: установка двери', 2000, 'шт', '🧮', 'calculator:Монтаж', 70),
+  ('calc-radiator-installation', 'Установка батареи', 'Позиция калькулятора: установка батареи', 1500, 'шт', '🧮', 'calculator:Монтаж', 80),
+  ('calc-plumbing-installation', 'Установка сантехники', 'Позиция калькулятора: установка сантехники', 800, 'шт', '🧮', 'calculator:Монтаж', 90),
+  ('calc-outlet-installation', 'Установка розеток и выключателей', 'Позиция калькулятора: установка розеток и выключателей', 600, 'шт', '🧮', 'calculator:Монтаж', 100),
+  ('calc-external-finishing', 'Наружная отделка', 'Позиция калькулятора: наружная отделка', 2500, 'м²', '🧮', 'calculator:Отделка', 110),
+  ('calc-internal-finishing', 'Внутренняя отделка', 'Позиция калькулятора: внутренняя отделка', 2500, 'м²', '🧮', 'calculator:Отделка', 120),
+  ('calc-plaster-paint', 'Штукатурные и малярные работы', 'Позиция калькулятора: штукатурные и малярные работы', 2500, 'м²', '🧮', 'calculator:Отделка', 130),
+  ('calc-ceiling-installation', 'Монтаж потолков', 'Позиция калькулятора: монтаж потолков', 600, 'м²', '🧮', 'calculator:Отделка', 140),
+  ('calc-facade-repair', 'Ремонт фасадов', 'Позиция калькулятора: ремонт фасадов', 800, 'м²', '🧮', 'calculator:Отделка', 150),
+  ('calc-roof-repair', 'Ремонт кровли', 'Позиция калькулятора: ремонт кровли', 300, 'м²', '🧮', 'calculator:Отделка', 160),
+  ('calc-demolition', 'Демонтажные работы', 'Позиция калькулятора: демонтажные работы', 200, 'м²', '🧮', 'calculator:Отделка', 170),
+  ('calc-wall-leveling', 'Выравнивание стен', 'Позиция калькулятора: выравнивание стен', 330, 'м²', '🧮', 'calculator:Отделка', 180),
+  ('calc-estimate-docs', 'Составление сметной документации', 'Позиция калькулятора: составление сметной документации', 50, 'шт', '🧮', 'calculator:Документация', 190)
+on conflict (id) do update
+set title = excluded.title,
+    description = excluded.description,
+    price = excluded.price,
+    unit = excluded.unit,
+    icon = excluded.icon,
+    category = excluded.category,
+    sort_order = excluded.sort_order,
+    is_active = true;
+
 insert into public.employees (id, name, position, experience, photo_url, sort_order)
 values
   ('nikolay-sergeevich', 'Николай Сергеевич', 'Директор', 'Опыт работы: с 2009 года', '/img/Николай Сергеевич.jpg', 10),

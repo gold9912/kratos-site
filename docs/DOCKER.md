@@ -41,12 +41,22 @@ CLIENT_IMAGE=ghcr.io/owner/kratos-site-client:latest
 HTTP_PORT=80
 CLIENT_ORIGIN=https://example.com
 COOKIE_SECURE=true
+ADMIN_EMAILS=admin@example.com
 SUPABASE_URL=https://project.supabase.co
 SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
+MAIL_FROM=site@example.com
+MAIL_TO=orders@example.com
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=site@example.com
+SMTP_PASS=...
 ```
 
 Production-сервер открывает наружу только клиентский Nginx. Backend доступен внутри Docker network, а браузерские запросы идут через `/api` proxy.
+
+Для SMTP на порту `465` обычно нужен `SMTP_SECURE=true`. Для `587` обычно используется `SMTP_SECURE=false` и STARTTLS. `MAIL_FROM` должен быть разрешен SMTP-провайдером, иначе письмо может быть принято, но не доставлено или попасть в spam.
 
 ## Useful commands
 

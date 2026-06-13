@@ -1,4 +1,4 @@
-import type { Employee, EstimateItem, Profile, Review, ServiceItem, SessionUser } from "./types";
+import type { CalculatorItem, Employee, EstimateItem, Profile, Review, ServiceItem, SessionUser } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -40,10 +40,11 @@ export const api = {
       body: JSON.stringify(payload)
     }),
   services: () => request<ServiceItem[]>("/services"),
+  calculatorItems: () => request<CalculatorItem[]>("/calculator/items"),
   employees: () => request<Employee[]>("/employees"),
   reviews: () => request<Review[]>("/reviews"),
   createOrder: (payload: { customerName: string; phone: string; serviceId: string; area?: number; message?: string }) =>
-    request<{ id: string }>("/orders", {
+    request<{ id: string; mail: { status: "sent" | "skipped" | "failed"; message: string } }>("/orders", {
       method: "POST",
       body: JSON.stringify(payload)
     }),
@@ -62,5 +63,11 @@ export const api = {
       method: "POST",
       body: formData
     });
-  }
+  },
+  adminCalculatorItems: () => request<CalculatorItem[]>("/admin/calculator-items"),
+  updateAdminCalculatorItem: (id: string, payload: Partial<CalculatorItem>) =>
+    request<CalculatorItem>(`/admin/calculator-items/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    })
 };

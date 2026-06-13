@@ -30,10 +30,13 @@ supabase db reset
 - `GET /api/health` возвращает `status: ok`.
 - `GET /api/services` возвращает 17 услуг.
 - `GET /api/employees` возвращает 4 сотрудников.
-- `POST /api/calculator/estimate` для `cosmetic-renovation * 10` возвращает `20000`.
+- `GET /api/calculator/items` возвращает 19 измеряемых позиций с разделами.
+- `POST /api/calculator/estimate` для `calc-cosmetic-renovation * 10` возвращает `20000`.
 - Frontend открывается на `http://127.0.0.1:5173`.
 - Форма заявки создает заказ.
+- Если SMTP не настроен, заявка возвращает `mail.status: skipped`; для реальной почты заполнить `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, `MAIL_TO`.
 - Регистрация и вход создают HttpOnly cookies.
+- Пользователь из `ADMIN_EMAILS` видит кнопку админки и может редактировать параметры калькулятора.
 - Отзыв без авторизации запрещен.
 - Отзыв с 1-5 изображениями создается после входа.
 
@@ -43,6 +46,7 @@ supabase db reset
 docker compose -p kratos-site up --build -d
 Invoke-RestMethod http://localhost:3000/api/health
 Invoke-RestMethod http://localhost:3000/api/services
-Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/calculator/estimate -ContentType 'application/json' -Body '{"items":[{"serviceId":"cosmetic-renovation","quantity":10}]}'
+Invoke-RestMethod http://localhost:3000/api/calculator/items
+Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/calculator/estimate -ContentType 'application/json' -Body '{"items":[{"serviceId":"calc-cosmetic-renovation","quantity":10}]}'
 docker compose -p kratos-site down
 ```

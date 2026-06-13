@@ -1,11 +1,11 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import type { Request } from "express";
-import { SupabaseService } from "../database/supabase.service";
+import { AuthService } from "./auth.service";
 import type { AuthenticatedRequest } from "./authenticated-request";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(private readonly auth: AuthService) {}
 
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest & Request>();
@@ -15,13 +15,13 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException("Authentication is required");
     }
 
-    const { data, error } = await this.supabase.anon().auth.getUser(token);
+    const user = await this.auth.validateAccessToken(token);
 
-    if (error || !data.user) {
+    if (!user) {
       throw new UnauthorizedException("Invalid session");
     }
 
-    request.user = { id: data.user.id, email: data.user.email };
+    request.user = { id: user.id, email: user.email };
     return true;
   }
 

@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { AdminModule } from "./admin/admin.module";
 import { ConfigModule } from "@nestjs/config";
 import { AuthModule } from "./auth/auth.module";
 import { CalculatorModule } from "./calculator/calculator.module";
@@ -16,6 +17,7 @@ import { UploadsModule } from "./uploads/uploads.module";
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
     HealthModule,
+    AdminModule,
     AuthModule,
     ProfilesModule,
     ServicesModule,

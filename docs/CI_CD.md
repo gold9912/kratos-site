@@ -40,6 +40,7 @@ docs/github-actions/deploy.example.yml
 | `SERVER_PORT` | SSH-порт, обычно `22`. |
 | `CLIENT_ORIGIN` | Публичный URL сайта, например `https://example.com`. |
 | `COOKIE_SECURE` | `true` для HTTPS. |
+| `ADMIN_EMAILS` | Email администраторов через запятую. |
 | `SUPABASE_URL` | URL Supabase project. |
 | `SUPABASE_ANON_KEY` | Supabase anon key. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key только для backend. |
@@ -47,6 +48,7 @@ docs/github-actions/deploy.example.yml
 | `MAIL_TO` | Email получателя заявок. |
 | `SMTP_HOST` | SMTP host. |
 | `SMTP_PORT` | SMTP port. |
+| `SMTP_SECURE` | `true` для SMTPS/465, обычно `false` для 587. |
 | `SMTP_USER` | SMTP user. |
 | `SMTP_PASS` | SMTP password. |
 

@@ -1,6 +1,6 @@
 import "./styles.css";
 import { api } from "./api";
-import type { Employee, Review, ServiceItem, SessionUser } from "./types";
+import type { CalculatorItem, Employee, Review, ServiceItem, SessionUser } from "./types";
 
 const appRoot = document.querySelector<HTMLDivElement>("#app");
 
@@ -11,6 +11,7 @@ if (!appRoot) {
 const app = appRoot;
 
 let services: ServiceItem[] = [];
+let calculatorItems: CalculatorItem[] = [];
 let employees: Employee[] = [];
 let reviews: Review[] = [];
 let currentUser: SessionUser | null = null;
@@ -33,6 +34,7 @@ app.innerHTML = `
     </nav>
     <div class="header-profile">
       <button class="login-btn" data-action="open-auth">Вход</button>
+      <button class="admin-btn hidden" data-action="open-admin">Админ</button>
       <button class="profile-chip hidden" data-action="open-profile">
         <img src="${DEFAULT_AVATAR}" alt="" />
         <span>Профиль</span>
@@ -101,6 +103,12 @@ app.innerHTML = `
         <div id="totalPrice">0 ₽</div>
       </div>
     </section>
+
+    <section id="adminPanel" class="admin-panel hidden">
+      <h2>Панель администратора</h2>
+      <p>Редактирование параметров калькулятора без изменения структуры базы.</p>
+      <div class="admin-table" id="adminCalculatorItems"></div>
+    </section>
   </main>
 
   <footer>
@@ -114,7 +122,7 @@ app.innerHTML = `
 
   <dialog id="orderDialog" class="modal">
     <form method="dialog" class="modal-content" id="orderForm">
-      <button class="close" value="cancel" aria-label="Закрыть">×</button>
+      <button type="button" class="close" data-action="close-dialog" aria-label="Закрыть">×</button>
       <h3>Оставить заявку</h3>
       <label>Имя<input name="customerName" required /></label>
       <label>Телефон<input name="phone" required /></label>
@@ -126,7 +134,7 @@ app.innerHTML = `
 
   <dialog id="authDialog" class="modal">
     <form method="dialog" class="modal-content" id="authForm">
-      <button class="close" value="cancel" aria-label="Закрыть">×</button>
+      <button type="button" class="close" data-action="close-dialog" aria-label="Закрыть">×</button>
       <h3>Авторизация</h3>
       <label>Email<input name="email" type="email" required /></label>
       <label>Пароль<input name="password" type="password" minlength="6" required /></label>
@@ -137,7 +145,7 @@ app.innerHTML = `
 
   <dialog id="registerDialog" class="modal">
     <form method="dialog" class="modal-content" id="registerForm">
-      <button class="close" value="cancel" aria-label="Закрыть">×</button>
+      <button type="button" class="close" data-action="close-dialog" aria-label="Закрыть">×</button>
       <h3>Регистрация</h3>
       <label>Имя<input name="username" required /></label>
       <label>Email<input name="email" type="email" required /></label>
@@ -148,7 +156,7 @@ app.innerHTML = `
 
   <dialog id="profileDialog" class="modal">
     <form method="dialog" class="modal-content" id="profileForm">
-      <button class="close" value="cancel" aria-label="Закрыть">×</button>
+      <button type="button" class="close" data-action="close-dialog" aria-label="Закрыть">×</button>
       <h3>Профиль</h3>
       <label>Имя<input name="username" /></label>
       <label>Дата рождения<input name="birthDate" type="date" /></label>
@@ -162,7 +170,7 @@ app.innerHTML = `
 
   <dialog id="reviewDialog" class="modal">
     <form method="dialog" class="modal-content" id="reviewForm">
-      <button class="close" value="cancel" aria-label="Закрыть">×</button>
+      <button type="button" class="close" data-action="close-dialog" aria-label="Закрыть">×</button>
       <h3>Добавить отзыв</h3>
       <textarea name="reviewText" placeholder="Ваш отзыв" required></textarea>
       <div class="stars-select" aria-label="Оценка">
@@ -189,7 +197,6 @@ void bootstrap();
 async function bootstrap() {
   await Promise.all([loadSession(), loadCatalog(), loadReviews()]);
   bindEvents();
-  addCalcRow();
 }
 
 async function loadSession() {
@@ -199,8 +206,9 @@ async function loadSession() {
 }
 
 async function loadCatalog() {
-  [services, employees] = await Promise.all([api.services(), api.employees()]);
+  [services, calculatorItems, employees] = await Promise.all([api.services(), api.calculatorItems(), api.employees()]);
   renderServices();
+  renderCalculatorRows();
   renderEmployees();
 }
 
@@ -217,11 +225,13 @@ function bindEvents() {
 
     const action = actionTarget.dataset.action;
     if (action === "open-auth") authDialog.showModal();
+    if (action === "close-dialog") actionTarget.closest<HTMLDialogElement>("dialog")?.close();
     if (action === "open-register") {
       authDialog.close();
       registerDialog.showModal();
     }
     if (action === "open-profile") void openProfile();
+    if (action === "open-admin") void openAdminPanel();
     if (action === "open-order") {
       selectedServiceId = actionTarget.dataset.serviceId ?? "";
       orderDialog.showModal();
@@ -231,6 +241,7 @@ function bindEvents() {
     if (action === "next-review") showReview(currentSlide + 1);
     if (action === "add-calc-row") addCalcRow();
     if (action === "calculate") void calculate();
+    if (action === "save-admin-calculator") void saveAdminCalculatorItem(actionTarget);
     if (action === "logout") void logout();
   });
 
@@ -239,6 +250,7 @@ function bindEvents() {
   document.querySelector<HTMLFormElement>("#profileForm")?.addEventListener("submit", onProfileSave);
   document.querySelector<HTMLFormElement>("#orderForm")?.addEventListener("submit", onOrderSubmit);
   document.querySelector<HTMLFormElement>("#reviewForm")?.addEventListener("submit", onReviewSubmit);
+  document.querySelector("#adminCalculatorItems")?.addEventListener("submit", (event) => event.preventDefault());
   document.querySelector(".stars-select")?.addEventListener("click", (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-rating]");
     if (!button) return;
@@ -327,11 +339,13 @@ function showReview(index: number) {
 
 function renderSession() {
   const loginButton = document.querySelector<HTMLElement>(".login-btn");
+  const adminButton = document.querySelector<HTMLElement>(".admin-btn");
   const profileChip = document.querySelector<HTMLElement>(".profile-chip");
   const avatar = profileChip?.querySelector<HTMLImageElement>("img");
-  if (!loginButton || !profileChip || !avatar) return;
+  if (!loginButton || !adminButton || !profileChip || !avatar) return;
 
   loginButton.classList.toggle("hidden", Boolean(currentUser));
+  adminButton.classList.toggle("hidden", !currentUser?.isAdmin);
   profileChip.classList.toggle("hidden", !currentUser);
   avatar.src = currentUser?.avatarUrl ?? DEFAULT_AVATAR;
 }
@@ -362,44 +376,50 @@ function openReviewDialog() {
 async function onLogin(event: SubmitEvent) {
   event.preventDefault();
   const form = event.currentTarget as HTMLFormElement;
-  const data = new FormData(form);
-  currentUser = (await api.login({ email: getString(data, "email"), password: getString(data, "password") })).user;
-  authDialog.close();
-  renderSession();
-  showToast("Вы вошли");
+  await runFormAction(form, async () => {
+    const data = new FormData(form);
+    currentUser = (await api.login({ email: getString(data, "email"), password: getString(data, "password") })).user;
+    authDialog.close();
+    renderSession();
+    showToast("Вы вошли");
+  });
 }
 
 async function onRegister(event: SubmitEvent) {
   event.preventDefault();
   const form = event.currentTarget as HTMLFormElement;
-  const data = new FormData(form);
-  currentUser = (
-    await api.register({
-      username: getString(data, "username"),
-      email: getString(data, "email"),
-      password: getString(data, "password")
-    })
-  ).user;
-  registerDialog.close();
-  renderSession();
-  showToast("Регистрация успешна");
+  await runFormAction(form, async () => {
+    const data = new FormData(form);
+    currentUser = (
+      await api.register({
+        username: getString(data, "username"),
+        email: getString(data, "email"),
+        password: getString(data, "password")
+      })
+    ).user;
+    registerDialog.close();
+    renderSession();
+    showToast("Регистрация успешна");
+  });
 }
 
 async function onProfileSave(event: SubmitEvent) {
   event.preventDefault();
   const form = event.currentTarget as HTMLFormElement;
-  const data = new FormData(form);
-  const profile = await api.updateProfile({
-    username: getString(data, "username"),
-    birthDate: getString(data, "birthDate") || null,
-    age: getString(data, "age") ? Number(getString(data, "age")) : null,
-    gender: getString(data, "gender") || null,
-    avatarUrl: getString(data, "avatarUrl") || null
+  await runFormAction(form, async () => {
+    const data = new FormData(form);
+    const profile = await api.updateProfile({
+      username: getString(data, "username"),
+      birthDate: getString(data, "birthDate") || null,
+      age: getString(data, "age") ? Number(getString(data, "age")) : null,
+      gender: getString(data, "gender") || null,
+      avatarUrl: getString(data, "avatarUrl") || null
+    });
+    currentUser = currentUser ? { ...currentUser, username: profile.username, avatarUrl: profile.avatarUrl } : currentUser;
+    profileDialog.close();
+    renderSession();
+    showToast("Профиль сохранен");
   });
-  currentUser = currentUser ? { ...currentUser, username: profile.username, avatarUrl: profile.avatarUrl } : currentUser;
-  profileDialog.close();
-  renderSession();
-  showToast("Профиль сохранен");
 }
 
 async function logout() {
@@ -413,17 +433,23 @@ async function logout() {
 async function onOrderSubmit(event: SubmitEvent) {
   event.preventDefault();
   const form = event.currentTarget as HTMLFormElement;
-  const data = new FormData(form);
-  await api.createOrder({
-    customerName: getString(data, "customerName"),
-    phone: getString(data, "phone"),
-    serviceId: selectedServiceId,
-    area: getString(data, "area") ? Number(getString(data, "area")) : undefined,
-    message: getString(data, "message") || undefined
+  await runFormAction(form, async () => {
+    const data = new FormData(form);
+    const result = await api.createOrder({
+      customerName: getString(data, "customerName"),
+      phone: getString(data, "phone"),
+      serviceId: selectedServiceId,
+      area: getString(data, "area") ? Number(getString(data, "area")) : undefined,
+      message: getString(data, "message") || undefined
+    });
+    orderDialog.close();
+    form.reset();
+    if (result.mail.status === "sent") {
+      showToast("Заявка отправлена на почту");
+    } else {
+      showToast(`Заявка сохранена. ${result.mail.message}`);
+    }
   });
-  orderDialog.close();
-  form.reset();
-  showToast("Заявка отправлена");
 }
 
 async function onReviewSubmit(event: SubmitEvent) {
@@ -434,19 +460,21 @@ async function onReviewSubmit(event: SubmitEvent) {
   }
 
   const form = event.currentTarget as HTMLFormElement;
-  const data = new FormData(form);
-  const images = data.getAll("images").filter((file): file is File => file instanceof File && file.size > 0);
-  const review = await api.createReview({
-    reviewText: getString(data, "reviewText"),
-    rating: selectedRating,
-    images
+  await runFormAction(form, async () => {
+    const data = new FormData(form);
+    const images = data.getAll("images").filter((file): file is File => file instanceof File && file.size > 0);
+    const review = await api.createReview({
+      reviewText: getString(data, "reviewText"),
+      rating: selectedRating,
+      images
+    });
+    reviews = [review, ...reviews];
+    currentSlide = 0;
+    renderReviews();
+    reviewDialog.close();
+    form.reset();
+    showToast("Отзыв отправлен");
   });
-  reviews = [review, ...reviews];
-  currentSlide = 0;
-  renderReviews();
-  reviewDialog.close();
-  form.reset();
-  showToast("Отзыв отправлен");
 }
 
 function addCalcRow() {
@@ -457,7 +485,7 @@ function addCalcRow() {
   row.innerHTML = `
     <select class="service-select">
       <option value="">Выберите услугу</option>
-      ${services.map((service) => `<option value="${service.id}">${service.title}</option>`).join("")}
+      ${renderCalculatorOptions()}
     </select>
     <input class="quantity-input" type="number" min="1" placeholder="Количество" />
   `;
@@ -465,15 +493,114 @@ function addCalcRow() {
 }
 
 async function calculate() {
-  const items = Array.from(document.querySelectorAll(".calc-row"))
-    .map((row) => ({
-      serviceId: row.querySelector<HTMLSelectElement>(".service-select")?.value ?? "",
-      quantity: Number(row.querySelector<HTMLInputElement>(".quantity-input")?.value ?? 0)
-    }))
-    .filter((item) => item.serviceId && item.quantity > 0);
+  try {
+    const items = Array.from(document.querySelectorAll(".calc-row"))
+      .map((row) => ({
+        serviceId: row.querySelector<HTMLSelectElement>(".service-select")?.value ?? "",
+        quantity: Number(row.querySelector<HTMLInputElement>(".quantity-input")?.value ?? 0)
+      }))
+      .filter((item) => item.serviceId && item.quantity > 0);
 
-  const result = await api.estimate(items);
-  setText("#totalPrice", formatMoney(result.total));
+    if (items.length === 0) {
+      showToast("Выберите услугу и количество");
+      return;
+    }
+
+    const result = await api.estimate(items);
+    setText("#totalPrice", formatMoney(result.total));
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "Ошибка расчета");
+  }
+}
+
+function renderCalculatorRows() {
+  document.querySelectorAll(".calc-row").forEach((row) => row.remove());
+  addCalcRow();
+}
+
+function renderCalculatorOptions() {
+  const groups = new Map<string, CalculatorItem[]>();
+
+  calculatorItems
+    .filter((item) => item.isActive)
+    .forEach((item) => {
+      const group = groups.get(item.category) ?? [];
+      group.push(item);
+      groups.set(item.category, group);
+    });
+
+  return [...groups.entries()]
+    .map(
+      ([category, items]) => `
+        <optgroup label="${category}">
+          ${items.map((item) => `<option value="${item.id}">${item.title} (${item.unit})</option>`).join("")}
+        </optgroup>
+      `
+    )
+    .join("");
+}
+
+async function openAdminPanel() {
+  if (!currentUser?.isAdmin) {
+    showToast("Нужны права администратора");
+    return;
+  }
+
+  calculatorItems = await api.adminCalculatorItems();
+  renderAdminCalculatorItems();
+  document.querySelector("#adminPanel")?.classList.remove("hidden");
+  document.querySelector("#adminPanel")?.scrollIntoView({ behavior: "smooth" });
+}
+
+function renderAdminCalculatorItems() {
+  const container = document.querySelector("#adminCalculatorItems");
+  if (!container) return;
+
+  container.innerHTML = calculatorItems
+    .map(
+      (item) => `
+        <form class="admin-row" data-item-id="${item.id}">
+          <input name="title" value="${escapeHtml(item.title ?? "")}" aria-label="Название" />
+          <input name="category" value="${escapeHtml(item.category ?? "")}" aria-label="Раздел" />
+          <input name="price" type="number" min="0" value="${item.price ?? 0}" aria-label="Цена" />
+          <select name="unit" aria-label="Единица">
+            <option value="м²" ${item.unit === "м²" ? "selected" : ""}>м²</option>
+            <option value="шт" ${item.unit === "шт" ? "selected" : ""}>шт</option>
+          </select>
+          <label class="admin-check"><input name="isActive" type="checkbox" ${item.isActive ? "checked" : ""} /> Активно</label>
+          <button type="button" class="secondary-btn" data-action="save-admin-calculator">Сохранить</button>
+        </form>
+      `
+    )
+    .join("");
+}
+
+async function saveAdminCalculatorItem(button: HTMLElement) {
+  const form = button.closest<HTMLFormElement>(".admin-row");
+  if (!form) return;
+
+  await runFormAction(form, async () => {
+    const id = form.dataset.itemId;
+    if (!id) return;
+    const data = new FormData(form);
+    const title = getString(data, "title");
+    const category = getString(data, "category");
+    if (!title || !category) {
+      showToast("Заполните название и раздел");
+      return;
+    }
+
+    const updated = await api.updateAdminCalculatorItem(id, {
+      title,
+      category,
+      price: Number(getString(data, "price")),
+      unit: getString(data, "unit") as "м²" | "шт",
+      isActive: data.get("isActive") === "on"
+    });
+    calculatorItems = calculatorItems.map((item) => (item.id === updated.id ? updated : item));
+    renderCalculatorRows();
+    showToast("Параметр калькулятора сохранен");
+  });
 }
 
 function renderRatingInput() {
@@ -522,4 +649,34 @@ function showToast(text: string) {
   toast.textContent = text;
   toast.classList.add("show");
   window.setTimeout(() => toast.classList.remove("show"), 3000);
+}
+
+async function runFormAction(form: HTMLFormElement, action: () => Promise<void>) {
+  const buttons = Array.from(form.querySelectorAll<HTMLButtonElement>("button"));
+  buttons.forEach((button) => {
+    button.disabled = true;
+  });
+
+  try {
+    await action();
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "Ошибка выполнения действия");
+  } finally {
+    buttons.forEach((button) => {
+      button.disabled = false;
+    });
+  }
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (char) => {
+    const replacements: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#039;"
+    };
+    return replacements[char] ?? char;
+  });
 }

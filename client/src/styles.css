@@ -51,6 +51,7 @@ nav a {
 }
 
 .login-btn,
+.admin-btn,
 .profile-chip,
 .primary-btn,
 .secondary-btn,
@@ -63,6 +64,7 @@ nav a {
 }
 
 .login-btn,
+.admin-btn,
 .primary-btn,
 .service-card button,
 .review-btn {
@@ -73,6 +75,12 @@ nav a {
 .secondary-btn {
   background: #e5e7eb;
   color: #111827;
+}
+
+.header-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .profile-chip {
@@ -88,6 +96,11 @@ nav a {
   height: 28px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .hidden {
@@ -355,6 +368,55 @@ h2 {
   font-weight: 800;
 }
 
+.admin-panel {
+  background: #fff;
+}
+
+.admin-panel p {
+  max-width: 760px;
+  margin: -12px 0 24px;
+  color: #52616f;
+  line-height: 1.5;
+}
+
+.admin-table {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.5fr) minmax(150px, 1fr) 120px 96px 120px 130px;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.admin-row input,
+.admin-row select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #bcccdc;
+  border-radius: 6px;
+  padding: 10px;
+  background: #fff;
+}
+
+.admin-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-check input {
+  width: auto;
+}
+
 footer {
   background: #111827;
   color: #fff;
@@ -432,7 +494,8 @@ footer {
   }
 
   .portfolio-slide.active,
-  .calc-row {
+  .calc-row,
+  .admin-row {
     grid-template-columns: 1fr;
   }
 

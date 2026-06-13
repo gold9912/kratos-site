@@ -7,7 +7,7 @@ export class CalculatorService {
   constructor(private readonly services: ServicesService) {}
 
   async estimate(dto: EstimateDto) {
-    const services = await this.services.findAll();
+    const services = await this.services.findCalculatorItems();
     const byId = new Map(services.map((service) => [service.id, service]));
     let total = 0;
 

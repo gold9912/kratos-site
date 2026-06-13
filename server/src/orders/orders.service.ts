@@ -18,8 +18,8 @@ export class OrdersService {
     if (!service) throw new BadRequestException("Unknown service");
 
     if (!this.supabase.configured) {
-      await this.mail.notifyOrder(dto, service.title);
-      return { id: randomUUID() };
+      const mail = await this.mail.notifyOrder(dto, service.title);
+      return { id: randomUUID(), mail };
     }
 
     const { data, error } = await this.supabase
@@ -38,7 +38,7 @@ export class OrdersService {
 
     if (error) throw error;
 
-    await this.mail.notifyOrder(dto, service.title);
-    return { id: data.id };
+    const mail = await this.mail.notifyOrder(dto, service.title);
+    return { id: data.id, mail };
   }
 }

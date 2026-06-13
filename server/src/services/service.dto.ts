@@ -6,4 +6,16 @@ export interface ServiceDto {
   unit: "м²" | "шт";
   icon: string;
   category: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface CalculatorItemDto {
+  id: string;
+  title: string;
+  price: number;
+  unit: "м²" | "шт";
+  category: string;
+  isActive: boolean;
+  sortOrder: number;
 }

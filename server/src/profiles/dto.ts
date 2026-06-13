@@ -1,5 +1,13 @@
 import { IsInt, IsISO8601, IsOptional, IsString, IsUrl, Max, MaxLength, Min } from "class-validator";
 
+export interface ProfileDto {
+  username: string | null;
+  birthDate: string | null;
+  age: number | null;
+  gender: string | null;
+  avatarUrl: string | null;
+}
+
 export class UpdateProfileDto {
   @IsOptional()
   @IsString()

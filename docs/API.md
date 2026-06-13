@@ -9,7 +9,7 @@ Swagger доступен по `/docs` при запущенном backend.
 | `POST` | `/api/auth/register` | `{ email, password, username }` | Создает Supabase Auth пользователя, профиль и cookie-сессию. |
 | `POST` | `/api/auth/login` | `{ email, password }` | Создает HttpOnly cookie-сессию. |
 | `POST` | `/api/auth/logout` | - | Очищает cookies. |
-| `GET` | `/api/auth/me` | - | Возвращает текущего пользователя или `null`. |
+| `GET` | `/api/auth/me` | - | Возвращает текущего пользователя, включая `isAdmin`, или `null`. |
 
 ## Catalog
 
@@ -32,6 +32,8 @@ Swagger доступен по `/docs` при запущенном backend.
 }
 ```
 
+Ответ содержит `mail.status`: `sent`, `skipped` или `failed`. Если SMTP не настроен, заявка сохраняется, но API возвращает `skipped` и клиент показывает это в уведомлении.
+
 ## Reviews
 
 | Method | Path | Auth | Result |
@@ -47,12 +49,14 @@ Swagger доступен по `/docs` при запущенном backend.
 
 ## Calculator
 
+`GET /api/calculator/items` возвращает только измеряемые позиции калькулятора. Они хранятся в существующей таблице `services` с категорией вида `calculator:Раздел`.
+
 `POST /api/calculator/estimate`
 
 ```json
 {
   "items": [
-    { "serviceId": "cosmetic-renovation", "quantity": 10 }
+    { "serviceId": "calc-cosmetic-renovation", "quantity": 10 }
   ]
 }
 ```
@@ -64,3 +68,12 @@ Swagger доступен по `/docs` при запущенном backend.
   "total": 20000
 }
 ```
+
+## Admin
+
+Администраторы задаются переменной `ADMIN_EMAILS`, например `admin@example.com,owner@example.com`.
+
+| Method | Path | Auth | Result |
+| --- | --- | --- | --- |
+| `GET` | `/api/admin/calculator-items` | Admin | Все позиции калькулятора, включая неактивные. |
+| `PATCH` | `/api/admin/calculator-items/:id` | Admin | Обновляет название, раздел, цену, единицу, активность или порядок. |
